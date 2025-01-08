@@ -1,5 +1,6 @@
 use argh::FromArgs;
 use image::{GenericImageView, ImageError};
+use image::DynamicImage;
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
 struct DitherArgs {
@@ -29,7 +30,6 @@ enum Mode {
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
 
-
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name="palette")]
 /// Rendu de l’image avec une palette contenant un nombre limité de couleurs
@@ -57,8 +57,17 @@ fn main() -> Result<(), ImageError> {
 
     match args.mode {
         Mode::Seuil(_) => {
-            let img_bw = img.grayscale().to_rgb8(); // Seuillage en monochrome
-            save_image(img_bw, &args.output)?;
+            let img_bw = img.grayscale().to_luma8(); // Convertir en niveaux de gris
+            let img_bw = image::ImageBuffer::from_fn(img_bw.width(), img_bw.height(), |x, y| {
+                let pixel = img_bw.get_pixel(x, y);
+                if pixel[0] > 128 { // Seuil de luminosité à 128
+                    image::Luma([255]) // Blanc
+                } else {
+                    image::Luma([0]) // Noir
+                }
+            });
+            let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8(); // Convertir en RGB pour la sauvegarde
+            save_image(DynamicImage::ImageRgb8(img_bw), &args.output)?;
         }
         Mode::Palette(opts_palette) => {
             let mut img_palette = img.to_rgba8(); // Conversion pour manipulation de couleurs
