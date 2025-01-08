@@ -53,26 +53,26 @@ const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
-    let img = image::open(&args.input)?; // Ouvre l'image à partir du chemin spécifié
+    let img = image::open(&args.input)?; 
 
     match args.mode {
         Mode::Seuil(_) => {
-            let img_bw = img.grayscale().to_luma8(); // Convertir en niveaux de gris
+            let img_bw = img.grayscale().to_luma8(); 
             let img_bw = image::ImageBuffer::from_fn(img_bw.width(), img_bw.height(), |x, y| {
                 let pixel = img_bw.get_pixel(x, y);
-                if pixel[0] > 128 { // Seuil de luminosité à 128
-                    image::Luma([255]) // Blanc
+                if pixel[0] > 128 { 
+                    image::Luma([255]) 
                 } else {
-                    image::Luma([0]) // Noir
+                    image::Luma([0]) 
                 }
             });
-            let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8(); // Convertir en RGB pour la sauvegarde
+            let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8(); 
             save_image(DynamicImage::ImageRgb8(img_bw), &args.output)?;
         }
         Mode::Palette(opts_palette) => {
-            let mut img_palette = img.to_rgba8(); // Conversion pour manipulation de couleurs
+            let mut img_palette = img.to_rgb8(); 
             img_palette = reduce_palette(img_palette, opts_palette.n_couleurs);
-            save_image(DynamicImage::ImageRgba8(img_palette), &args.output)?;
+            save_image(DynamicImage::ImageRgb8(img_palette), &args.output)?;
         }
     }
 
