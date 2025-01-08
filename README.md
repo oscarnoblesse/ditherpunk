@@ -1,3 +1,5 @@
+
+
 Question2 :
     Pour ouvrir une image depuis un fichier, on utilise ... On obtient un DynamicImage, à quoi
     correspond ce type? Comment obtenir une image en mode rbg8 ...
@@ -18,4 +20,12 @@ Expliquer dans le README de votre rendu ce qui se passe ici.
 Question 3 / reponse : 
 
 Lorsque l'image de départ a un canal alpha (transparence), ce canal est ignoré lors de la conversion en niveaux de gris et lors du seuillage binaire. La conversion en niveaux de gris ne conserve pas la transparence, et le seuillage binaire ne prend pas en compte le canal alpha. Lorsque l'image est convertie en RGB pour la sauvegarde, le canal alpha n'est pas réintroduit. Par conséquent, l'image finale sauvegardée au format PNG est en RGB sans transparence, même si l'image d'origine avait un canal alpha.
+
+Question4 : 
+    Afficher dans le terminal la couleur du pixel (32, 52) de l’image de votre choix.
+
+Question4 reponse : 
+    Pour recuperais un pixel de mon image j'ai utiliser ce code la premier ligne permet de convertire mon image en rgb8. Puis la deuxieme ligne permet de recuperais mon pixel donc cezs valeur RGB. 
+    ![alt text](image.png)
+    ![alt text](image-2.png)
 

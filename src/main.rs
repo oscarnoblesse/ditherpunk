@@ -40,15 +40,15 @@ struct OptsPalette {
     n_couleurs: usize
 }
  
-const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
-const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
-const BLACK: image::Rgb<u8> = image::Rgb([0, 0, 0]);
-const BLUE: image::Rgb<u8> = image::Rgb([0, 0, 255]);
-const RED: image::Rgb<u8> = image::Rgb([255, 0, 0]);
-const GREEN: image::Rgb<u8> = image::Rgb([0, 255, 0]);
-const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
-const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
-const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
+// const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
+// const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
+// const BLACK: image::Rgb<u8> = image::Rgb([0, 0, 0]);
+// const BLUE: image::Rgb<u8> = image::Rgb([0, 0, 255]);
+// const RED: image::Rgb<u8> = image::Rgb([255, 0, 0]);
+// const GREEN: image::Rgb<u8> = image::Rgb([0, 255, 0]);
+// const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
+// const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
+// const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
 
 fn main() -> Result<(), ImageError> {
@@ -66,7 +66,9 @@ fn main() -> Result<(), ImageError> {
                     image::Luma([0]) 
                 }
             });
-            let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8(); 
+            let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8();
+            let pixel = img_bw.get_pixel(32, 50);
+            println!("Pixel(32, 50): {:?}", pixel);
             save_image(DynamicImage::ImageRgb8(img_bw), &args.output)?;
         }
         Mode::Palette(opts_palette) => {
