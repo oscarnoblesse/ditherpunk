@@ -29,3 +29,12 @@ Question4 reponse :
     ![alt text](imagePourReadMe/image.png)
     ![alt text](imagePourReadMe/image-2.png)
 
+Question5 :
+    Passer un pixel sur deux d’une image en blanc. Est-ce que l’image obtenue est reconnaissable?
+
+Question5 reponse : 
+    oui l'image optenu est reconnaissable. Pour le faire il suffisais de parcourir tout les pixel est une fois que la somme de x et y etat modulo 2 alors le programme transformer le pixel en blanc. 
+    ![alt text](imagePourReadMe/imageInitiale.jpeg)
+    ![alt text](imagePourReadMe/imageQuestion5PixelBlanc.png)
+    
+
