@@ -50,7 +50,10 @@ question6 :
 
 question6/reponse
     Pour recuperais la luminosité d'un pixel une fonction deja implementais peux etre utiliser elle s'appele .to_luma()
-    ![alt text](image.png)
+    ![alt text](imagePourReadMe/question6.png)
+    Pondérations de luminance : Les coefficients 0.2126, 0.7152 et 0.0722 proviennent de la norme ITU-R BT.709, utilisée pour convertir une image en niveaux de gris.
+    Conversion explicite : Les valeurs des composantes (rouge, vert, bleu) sont converties en f32 pour effectuer les multiplications, puis la luminance totale est arrondie et castée en u8.
+    Utilisation directe du tableau : Les valeurs pixel[0], pixel[1] et pixel[2] correspondent respectivement aux composantes rouge, vert et bleu.
 
 ---
 
@@ -59,13 +62,20 @@ question7 :
 
 question7/reponse
     ![alt text](imagePourReadMe/question7.png)
-    Nous convertissons l'image en niveaux de gris. La méthode grayscale convertit l'image en niveaux de gris, et to_luma8 convertit l'image en un format de 8 bits par pixel (Luma). Ensuite nous créons une nouvelle image en appliquant un seuillage binaire. Pour chaque pixel, si la valeur de luminosité est supérieure à 128, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
+    Nous convertissons l'image en niveaux de gris. La méthode grayscale convertit l'image en niveaux de gris. Ensuite nous créons une nouvelle image en appliquant un seuillage binaire basé sur la luminosité des pixels. La fonction get_pixel_luminosity est utilisée pour obtenir la luminosité d'un pixel. Pour chaque pixel, si la valeur de luminosité est supérieure à 128, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
     Pour finr, nous convertissons l'image en niveaux de gris (Luma) en une image RGB. Cela est nécessaire pour que l'image puisse être sauvegardée correctement en tant qu'image RGB.
 
 ---
 
-question 8 :
-    
+question 8 
+    Nous avons donc modifié la fonction mode_seuil pour permettre à l'utilisateur de spécifier des couleurs personnalisées pour les pixels noirs et blancs. Les couleurs sont spécifiées en utilisant le format R,G,B et sont passées en tant qu'options de ligne de commande. Voici comment nous avons fait : 
+    ![alt text](imagePourReadMe/question8(1).png)
+    Nous avons donc rajouté deux paramètres (noir, blanc) dans la struct OptsSeuil, la struct contenant les paramètres de la méthode seuil. Nous pouvons donc désormais dans la commande spécifié ces deux paramètres pour pouvoir changer la couleur.
+    Nous avons ensuite modifié la fonction 'mode_seuil' pour pouvoir changer de couleur les pixels de l'image avec les couleurs spécifié en paramètre. Voici comment nous avons fait :
+    ![alt text](imagePourReadMe/question8(2).png)
+    Nous pouvons donc voir dans cette méthode que nous utilisons les 
+
+---
 
 question9:
     Comment calculer la distance entre deux couleurs? Indiquer dans le README la méthode de
