@@ -148,3 +148,15 @@ question11/reponse :
 
 
 
+question 23 :
+
+    Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help.
+
+question 23/reponse : 
+    
+    Voici les description apres avoir utiliser la commande cargo run -- help. On peux voir que chaque element qui peux etre un mode ou un arguments a une description. 
+![alt text](./imagePourReadMe/imageQuestion23helpCargo.png)
+
+    Et voisi les description des parametre de l'un de nos mode. 
+
+![alt text](./imagePourReadMe/imageQuestion23HelpCargoMode.png)
