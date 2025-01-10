@@ -95,10 +95,10 @@ question10:
 
 question10/reponse : 
     voisi la fonction qui permet de modifier l'image avec les deux couleur donner par l'utilisateur.
-    ![alt text](image.png)
+    ![alt text](./imagePourReadMe/imageQuestion10ProgrammePrincipal.png)
 
     Cette fonction utilise deux autre fonction une pour recuperais le rgb des couleur de la pallette donner par l'utilisateur et une autre pour recuperais la valeur de chaque pixel pour chaque couleur de la pallette demander. Ce qui permet de connaitre quelle couleur et la plus proche du pixel selectionnais.
 
-![alt text](image-1.png)
+![alt text](./imagePourReadMe/imageQuestion10FonctionDeComparaissonDeCouleur.png)
 
-![alt text](image-2.png)
+![alt text](./imagePourReadMe/imageQuestion10FonctionDeRecuperationDeLaPallette.png)
