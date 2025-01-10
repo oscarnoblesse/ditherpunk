@@ -6,16 +6,16 @@ use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer};
 struct DitherArgs {
 
     /// le fichier d’entrée
-    #[argh(positional)]
+    #[argh(positional , description = "route vers l'image a transformer")]
     input: String,
 
     // le fichier de sortie
-    #[argh(positional)]
+    #[argh(positional, description = "route vers l'endroit ou l'image va etre enregistre")]
     output: Option<String>,
 
 
     /// le mode d’opération
-    #[argh(subcommand)]
+    #[argh(subcommand,description = "le mode selectionner selon la modification d'image que vous souhaité")]
     mode: Mode
 }
 
@@ -42,7 +42,7 @@ struct OptsSeuilNoirBlanc {
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="seuil")]
+#[argh(subcommand, name="seuil",description = "mode permetant de mettre l'image en noir et blanc.")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
 
@@ -53,11 +53,11 @@ struct OptsPixelBlanc {
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 
-#[argh(subcommand, name="dualColorMix")]
+#[argh(subcommand, name="dualColorMix",description = "mode permetant de modifier l'image selon un nombre de couleur de la palette.")]
 /// Rendu de l’image en mode pixel blanc.
 struct OptsDualColorMix {
     /// Couleur pour les pixels blancs (format: R,G,B)
-    #[argh(option, default = "String::from(\"0\")", description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    #[argh(option, default = "String::from(\"0\")", description = "nombre pour choisir le nombre de couleur de la palette")]
     nombre_palette: String,
 }
 
