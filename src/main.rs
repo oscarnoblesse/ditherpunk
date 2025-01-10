@@ -1,6 +1,6 @@
 use argh::FromArgs;
-use image::{GenericImageView, ImageError};
-use image::DynamicImage;
+use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer, Luma};
+
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
 struct DitherArgs {
@@ -27,8 +27,24 @@ struct DitherArgs {
 #[argh(subcommand)]
 enum Mode {
     Seuil(OptsSeuil),
+
     PixelBlanc(OptsPixelBlanc),
     DualColorMix(OptsDualColorMix),
+
+    SeuilNoirBlanc(OptsSeuilNoirBlanc),
+
+}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "seuilNoirBlanc", description = "mode de seuillage aux choix")]
+struct OptsSeuilNoirBlanc {
+    /// Couleur pour les pixels noirs (format: R,G,B)
+    #[argh(option, description = "mouleur pour les pixels noirs (format: R,G,B)")]
+    noir: String,
+
+    /// Couleur pour les pixels blancs (format: R,G,B)
+    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    blanc: String,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -37,11 +53,11 @@ enum Mode {
 struct OptsSeuil {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="pixelBlanc")]
-/// Rendu de l’image en mode pixel blanc.
+#[argh(subcommand, name = "pixelBlanc", description = "mode de pixel blanc")]
 struct OptsPixelBlanc {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
+
 #[argh(subcommand, name="dualColorMix")]
 /// Rendu de l’image en mode pixel blanc.
 struct OptsDualColorMix {}
@@ -67,18 +83,34 @@ fn main() -> Result<(), ImageError> {
             let _ = mode_seuil(img, &args.output);
         }
 
+
         Mode::PixelBlanc(_) => {
             let _ = mode_pixel_blanc(img, &args.output);
         }
 
         Mode::DualColorMix(_) => {
             let _ = mode_dual_couleur_pallete(img, &args.output , &args.nombre_de_couleur );
+
+        Mode::SeuilNoirBlanc(opts_seuil) => {
+            mode_seuilNoirBlanc(img, &args.output, opts_seuil);
+        }
+
         }
     }
 
     Ok(())
 }
 
+
+fn get_pixel_luminosity(pixel: image::Rgb<u8>) -> u8 {
+    // Pondération selon les coefficients standards pour le calcul de luminance
+    let red = pixel[0] as f32 * 0.2126;
+    let green = pixel[1] as f32 * 0.7152;
+    let blue = pixel[2] as f32 * 0.0722;
+
+    // Calculer la luminance et la convertir en entier
+    (red + green + blue).round() as u8
+}
 
 fn save_image(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
     match output {
@@ -90,19 +122,49 @@ fn save_image(img: DynamicImage, output: &Option<String>) -> Result<(), ImageErr
 
 
 fn mode_seuil(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
-    let img_bw = img.grayscale().to_luma8(); 
-    let img_bw = image::ImageBuffer::from_fn(img_bw.width(), img_bw.height(), |x, y| {
-        let pixel = img_bw.get_pixel(x, y);
-        if pixel[0] > 128 { 
-            image::Luma([255]) 
+    let grayscale = img.grayscale().to_rgb8();
+    
+    let thresholded = ImageBuffer::from_fn(grayscale.width(), grayscale.height(), |x, y| {
+        let pixel = grayscale.get_pixel(x, y);
+        let luminosity = get_pixel_luminosity(*pixel);
+        if luminosity > 128 {
+            image::Rgb([255, 255, 255])
         } else {
-            image::Luma([0]) 
+            image::Rgb([0, 0, 0])
         }
     });
-    let img_bw = DynamicImage::ImageLuma8(img_bw).to_rgb8();
-    let pixel = img_bw.get_pixel(32, 50);
+    
+    let rgb_image = DynamicImage::ImageRgb8(thresholded);
+    
+    let pixel_value = rgb_image.get_pixel(32, 50);
+    println!("Pixel (32, 50): {:?}", pixel_value);
+    
+    save_image(rgb_image, output)?;
+    
+    Ok(())
+}
+
+
+fn mode_seuilNoirBlanc(img: DynamicImage, output: &Option<String>, opts: OptsSeuilNoirBlanc) -> Result<(), ImageError> {
+    let grayscale = img.grayscale().to_rgb8(); 
+
+    let noir: Vec<u8> = opts.noir.split(',').map(|s| s.parse().unwrap()).collect();
+    let blanc: Vec<u8> = opts.blanc.split(',').map(|s| s.parse().unwrap()).collect();
+
+    let thresholded = ImageBuffer::from_fn(grayscale.width(), grayscale.height(), |x, y| {
+        let pixel = grayscale.get_pixel(x, y);
+        let luminosity = get_pixel_luminosity(*pixel);
+        if luminosity > 128 { 
+            image::Rgb([blanc[0], blanc[1], blanc[2]]) 
+        } else {
+            image::Rgb([noir[0], noir[1], noir[2]]) 
+        }
+    });
+
+    let rgb_image = DynamicImage::ImageRgb8(thresholded);
+    let pixel = rgb_image.get_pixel(32, 50);
     println!("Pixel(32, 50): {:?}", pixel);
-    let _ = save_image(DynamicImage::ImageRgb8(img_bw), output)?;
+    save_image(rgb_image, output)?;
     Ok(())
 }
 
