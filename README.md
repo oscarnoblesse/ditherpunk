@@ -38,3 +38,10 @@ Question5 reponse :
     ![alt text](imagePourReadMe/imageQuestion5PixelBlanc.png)
     
 
+question6 :
+    Comment récupérer la luminosité d’un pixel?
+
+
+question6/reponse
+    Pour recuperais la luminosité d'un pixel une fonction deja implementais peux etre utiliser elle s'appele .to_luma()
+    ![alt text](image.png)
