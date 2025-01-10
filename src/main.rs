@@ -9,7 +9,12 @@ struct DitherArgs {
     #[argh(positional)]
     input: String,
 
-    /// le fichier de sortie (optionnel)
+    // la deuxieme couleur d'entre
+    #[argh(positional)]
+    nombre_de_couleur: String,
+
+
+    // le fichier de sortie
     #[argh(positional)]
     output: Option<String>,
 
@@ -22,9 +27,12 @@ struct DitherArgs {
 #[argh(subcommand)]
 enum Mode {
     Seuil(OptsSeuil),
+
+    PixelBlanc(OptsPixelBlanc),
+    DualColorMix(OptsDualColorMix),
+
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
-    Palette(OptsPalette),
-    pixelBlanc(OptsPixelBlanc),
+
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -49,12 +57,11 @@ struct OptsSeuil {}
 struct OptsPixelBlanc {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name = "palette", description = "mode de palette de couleurs")]
-struct OptsPalette {
-    /// Nombre de couleurs dans la palette
-    #[argh(option, description = "nombre de couleurs dans la palette")]
-    n_couleurs: usize
-}
+
+#[argh(subcommand, name="dualColorMix")]
+/// Rendu de l’image en mode pixel blanc.
+struct OptsDualColorMix {}
+
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
 const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
@@ -73,25 +80,27 @@ fn main() -> Result<(), ImageError> {
 
     match args.mode {
         Mode::Seuil(_) => {
-            mode_seuil(img, &args.output);
+            let _ = mode_seuil(img, &args.output);
         }
+
+
+        Mode::PixelBlanc(_) => {
+            let _ = mode_pixel_blanc(img, &args.output);
+        }
+
+        Mode::DualColorMix(_) => {
+            let _ = mode_dual_couleur_pallete(img, &args.output , &args.nombre_de_couleur );
+
         Mode::SeuilNoirBlanc(opts_seuil) => {
             mode_seuilNoirBlanc(img, &args.output, opts_seuil);
         }
-        Mode::Palette(opts_palette) => {
-           mode_palette(opts_palette, img, &args.output);
-        }
-        Mode::pixelBlanc(_) => {
-            mode_pixelBlanc(img, &args.output);
+
         }
     }
 
     Ok(())
 }
 
-fn reduce_palette(img: image::RgbImage, n_couleurs: usize) -> image::RgbImage {
-    img
-}
 
 fn get_pixel_luminosity(pixel: image::Rgb<u8>) -> u8 {
     // Pondération selon les coefficients standards pour le calcul de luminance
@@ -111,11 +120,6 @@ fn save_image(img: DynamicImage, output: &Option<String>) -> Result<(), ImageErr
     Ok(())
 }
 
-fn mode_palette(opts_palette: OptsPalette, img: DynamicImage, output: &Option<String>) {
-    let mut img_palette = img.to_rgb8(); 
-    img_palette = reduce_palette(img_palette, opts_palette.n_couleurs);
-    save_image(DynamicImage::ImageRgb8(img_palette), output).unwrap();
-}
 
 fn mode_seuil(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
     let grayscale = img.grayscale().to_rgb8();
@@ -165,7 +169,7 @@ fn mode_seuilNoirBlanc(img: DynamicImage, output: &Option<String>, opts: OptsSeu
 }
 
 
-fn mode_pixelBlanc(img: DynamicImage, output: &Option<String>) {
+fn mode_pixel_blanc(img: DynamicImage, output: &Option<String>) {
     let mut img_rgb = img.to_rgb8();
     let (width, height) = img_rgb.dimensions();
 
@@ -176,7 +180,57 @@ fn mode_pixelBlanc(img: DynamicImage, output: &Option<String>) {
             }
         }
     }
+    let _ = save_image(DynamicImage::ImageRgb8(img_rgb), output);
+}
 
-    save_image(DynamicImage::ImageRgb8(img_rgb), output);
-    
+
+fn color_distance(pixel: &image::Rgba<u8>, color: &image::Rgb<u8>) -> i32 {
+    let r_diff = pixel[0] as i32 - color[0] as i32;
+    let g_diff = pixel[1] as i32 - color[1] as i32;
+    let b_diff = pixel[2] as i32 - color[2] as i32;
+    r_diff * r_diff + g_diff * g_diff + b_diff * b_diff
+}
+
+fn trouver_la_couleur_la_plus_proche(pixel: &image::Rgba<u8>, palette: &[image::Rgb<u8>]) -> image::Rgb<u8> {
+    let mut min_distance = i32::MAX;
+    let mut closest_color = palette[0];
+
+    for &color in palette.iter() {
+        let distance = color_distance(pixel, &color);
+        if distance < min_distance {
+            min_distance = distance;
+            closest_color = color;
+        }
+    }
+
+    closest_color
+}
+fn mode_dual_couleur_pallete(img: DynamicImage, output_path: &Option<String>, nombre_de_la_pallette: &str) -> Result<(), image::ImageError> {
+    let (width, height) = img.dimensions();
+    let mut new_img = img.to_rgb8(); 
+    let palette = get_color_palette(nombre_de_la_pallette);
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            let closest_color = trouver_la_couleur_la_plus_proche(&pixel, &palette);
+            new_img.put_pixel(x, y, closest_color);
+        }
+    }
+
+    let _ = save_image(DynamicImage::ImageRgb8(new_img), output_path);
+    Ok(())
+}
+
+
+fn get_color_palette(nombre_de_la_pallette: &str) -> Vec<image::Rgb<u8>> {
+    let colors = vec![WHITE, BLACK, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA,GREY];
+    let mut palette = Vec::new();
+    let n: usize = nombre_de_la_pallette.parse().unwrap_or(2).clamp(2, 8);
+
+    for i in 0..n {
+        palette.push(colors[i]);
+    }
+
+    palette
 }
