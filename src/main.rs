@@ -1,5 +1,5 @@
 use argh::FromArgs;
-use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer, Luma};
+use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -9,14 +9,10 @@ struct DitherArgs {
     #[argh(positional)]
     input: String,
 
-    // la deuxieme couleur d'entre
-    #[argh(positional)]
-    nombre_de_couleur: String,
-
-
     // le fichier de sortie
     #[argh(positional)]
     output: Option<String>,
+
 
     /// le mode d’opération
     #[argh(subcommand)]
@@ -27,10 +23,8 @@ struct DitherArgs {
 #[argh(subcommand)]
 enum Mode {
     Seuil(OptsSeuil),
-
     PixelBlanc(OptsPixelBlanc),
     DualColorMix(OptsDualColorMix),
-
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
 
 }
@@ -54,13 +48,18 @@ struct OptsSeuil {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "pixelBlanc", description = "mode de pixel blanc")]
-struct OptsPixelBlanc {}
+struct OptsPixelBlanc {
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 
 #[argh(subcommand, name="dualColorMix")]
 /// Rendu de l’image en mode pixel blanc.
-struct OptsDualColorMix {}
+struct OptsDualColorMix {
+    /// Couleur pour les pixels blancs (format: R,G,B)
+    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    nombre_palette: String,
+}
 
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
@@ -88,14 +87,13 @@ fn main() -> Result<(), ImageError> {
             let _ = mode_pixel_blanc(img, &args.output);
         }
 
-        Mode::DualColorMix(_) => {
-            let _ = mode_dual_couleur_pallete(img, &args.output , &args.nombre_de_couleur );
-
+        Mode::DualColorMix(opts_dual_color_mix) => {
+            let _ = mode_dual_couleur_pallete(img, &args.output , opts_dual_color_mix.nombre_palette );
+        }
         Mode::SeuilNoirBlanc(opts_seuil) => {
-            mode_seuilNoirBlanc(img, &args.output, opts_seuil);
+            let _ = mode_seuil_noir_blanc(img, &args.output, opts_seuil);
         }
 
-        }
     }
 
     Ok(())
@@ -145,7 +143,7 @@ fn mode_seuil(img: DynamicImage, output: &Option<String>) -> Result<(), ImageErr
 }
 
 
-fn mode_seuilNoirBlanc(img: DynamicImage, output: &Option<String>, opts: OptsSeuilNoirBlanc) -> Result<(), ImageError> {
+fn mode_seuil_noir_blanc(img: DynamicImage, output: &Option<String>, opts: OptsSeuilNoirBlanc) -> Result<(), ImageError> {
     let grayscale = img.grayscale().to_rgb8(); 
 
     let noir: Vec<u8> = opts.noir.split(',').map(|s| s.parse().unwrap()).collect();
@@ -205,7 +203,7 @@ fn trouver_la_couleur_la_plus_proche(pixel: &image::Rgba<u8>, palette: &[image::
 
     closest_color
 }
-fn mode_dual_couleur_pallete(img: DynamicImage, output_path: &Option<String>, nombre_de_la_pallette: &str) -> Result<(), image::ImageError> {
+fn mode_dual_couleur_pallete(img: DynamicImage, output_path: &Option<String>, nombre_de_la_pallette: String) -> Result<(), image::ImageError> {
     let (width, height) = img.dimensions();
     let mut new_img = img.to_rgb8(); 
     let palette = get_color_palette(nombre_de_la_pallette);
@@ -223,7 +221,7 @@ fn mode_dual_couleur_pallete(img: DynamicImage, output_path: &Option<String>, no
 }
 
 
-fn get_color_palette(nombre_de_la_pallette: &str) -> Vec<image::Rgb<u8>> {
+fn get_color_palette(nombre_de_la_pallette: String) -> Vec<image::Rgb<u8>> {
     let colors = vec![WHITE, BLACK, RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA,GREY];
     let mut palette = Vec::new();
     let n: usize = nombre_de_la_pallette.parse().unwrap_or(2).clamp(2, 8);
