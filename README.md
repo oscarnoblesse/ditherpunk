@@ -132,3 +132,19 @@ question10/reponse :
 ![alt text](./imagePourReadMe/imageQuestion10FonctionDeComparaissonDeCouleur.png)
 
 ![alt text](./imagePourReadMe/imageQuestion10FonctionDeRecuperationDeLaPallette.png)
+
+
+question11 : 
+    Votre application doit se comporter correctement si on donne une palette vide. Vous
+    expliquerez dans votre README le choix que vous avez fait dans ce cas.
+
+question11/reponse : 
+    Si l'utilisateur donner une palettee vide alors j'ai fait que par default parametre serais a 0  et dans le programme j'ai fait que au minimum il prendras 2 couleur de la palette pour generais l'image. comme cela evitera de rendre une image d'une seul couleur ou on poura pas voir de forme. 
+
+![alt text](./imagePourReadMe/imageQuestion11ParametreParDefautl.png)
+    cette commande permet de prendre un chiffre de minimum 2 et maximum 8 donc si l'utilisateur ne mais pas de paramettre ou d'une valeur de 1 alors cela crera une image a 2 couleur. 
+![alt text](./imagePourReadMe/imageQuestion11Clamp.png)
+
+
+
+

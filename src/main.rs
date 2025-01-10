@@ -57,7 +57,7 @@ struct OptsPixelBlanc {
 /// Rendu de l’image en mode pixel blanc.
 struct OptsDualColorMix {
     /// Couleur pour les pixels blancs (format: R,G,B)
-    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    #[argh(option, default = "String::from(\"0\")", description = "mouleur pour les pixels blancs (format: R,G,B)")]
     nombre_palette: String,
 }
 
