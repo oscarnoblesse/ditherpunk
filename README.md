@@ -146,6 +146,17 @@ question11/reponse :
 ![alt text](./imagePourReadMe/imageQuestion11Clamp.png)
 
 
+question13 : 
+Déterminer 𝐵3
+question13/reponse : 
+j'ai utiliser un programme pour generais la matrice de bayer voici le resultat 
+
+![alt text](imagePourReadMe/imageQuestion13Matricebayer.png)
+
+voici la fonction utiliser pour generais la matrice de bayer. 
+
+
+![alt text](imagePourReadMe/imageQuestion13ProgrammeGenerationMatriceBayer.png)
 
 
 question 23 :

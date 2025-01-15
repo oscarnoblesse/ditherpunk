@@ -77,6 +77,11 @@ fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
     let img = image::open(&args.input)?; 
 
+    let order = 3;
+    let bayer_matrix = generate_bayer_matrix(order);
+    println!("Bayer Matrix of order {}:", order);
+    print_matrix(&bayer_matrix);
+
     match args.mode {
         Mode::Seuil(_) => {
             let _ = mode_seuil(img, &args.output);
@@ -231,4 +236,37 @@ fn get_color_palette(nombre_de_la_pallette: String) -> Vec<image::Rgb<u8>> {
     }
 
     palette
+}
+
+
+fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
+    if order == 0 {
+        return vec![vec![0]];
+    }
+
+    let prev_matrix = generate_bayer_matrix(order - 1);
+    let size = prev_matrix.len();
+    let new_size = size * 2;
+    let mut matrix = vec![vec![0; new_size]; new_size];
+
+    for y in 0..size {
+        for x in 0..size {
+            let value = prev_matrix[y][x];
+            matrix[y][x] = 4 * value;
+            matrix[y][x + size] = 4 * value + 2;
+            matrix[y + size][x] = 4 * value + 3;
+            matrix[y + size][x + size] = 4 * value + 1;
+        }
+    }
+
+    matrix
+}
+
+fn print_matrix(matrix: &Vec<Vec<u32>>) {
+    for row in matrix {
+        for &value in row {
+            print!("{:2} ", value);
+        }
+        println!();
+    }
 }
