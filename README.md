@@ -239,6 +239,39 @@ save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
 
 ---
 
+question 17 :
+Pour une palette de couleurs comme dans la partie 3, expliquer dans votre README comment
+vous représentez l’erreur commise à chaque pixel, comment vous la diffusez
+
+question 17/reponse : 
+
+### Diffusion d'erreur pour une palette de couleurs
+
+#### Représentation de l'erreur commise à chaque pixel
+
+Lorsque nous convertissons une image en utilisant une palette de couleurs, l'erreur commise à chaque pixel est représentée comme un vecteur à trois composantes (rouge, vert, bleu). Cette erreur est la différence entre la couleur réelle du pixel et la couleur approximée choisie dans la palette.
+
+#### Calcul de l'erreur
+
+Pour chaque pixel, nous calculons l'erreur comme suit :
+
+1. **Obtenir la couleur réelle du pixel** : Nous récupérons la couleur réelle du pixel à partir de l'image originale.
+2. **Choisir la couleur approximée** : Nous choisissons la couleur la plus proche dans la palette.
+3. **Calculer l'erreur** : L'erreur est la différence entre la couleur réelle et la couleur approximée pour chaque composante (rouge, vert, bleu).
+
+#### Diffusion de l'erreur
+
+L'erreur est ensuite diffusée aux pixels voisins qui n'ont pas encore été traités. La diffusion de l'erreur est réalisée en utilisant une matrice de diffusion. Par exemple, pour la matrice ( ∗ 0.4 0.6 0 ), l'erreur est répartie comme suit :
+
+- 40% de l'erreur est ajoutée au pixel à droite (x + 1, y).
+- 60% de l'erreur est ajoutée au pixel en dessous (x, y + 1).
+
+### Conclusion
+
+La diffusion d'erreur pour une palette de couleurs implique de calculer l'erreur commise à chaque pixel en comparant la couleur réelle du pixel avec la couleur approximée choisie dans la palette. Cette erreur est ensuite diffusée aux pixels voisins en utilisant une matrice de diffusion, ce qui permet de répartir l'erreur de manière à obtenir une image plus lisse et plus fidèle à l'originale.
+
+---
+
 question 23 :
 
     Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help.
