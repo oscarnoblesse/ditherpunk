@@ -146,6 +146,27 @@ question11/reponse :
 ![alt text](./imagePourReadMe/imageQuestion11Clamp.png)
 
 
+question13 : 
+Déterminer 𝐵3
+question13/reponse : 
+j'ai utiliser un programme pour generais la matrice de bayer voici le resultat 
+
+![alt text](imagePourReadMe/imageQuestion13Matricebayer.png)
+
+voici la fonction utiliser pour generais la matrice de bayer. 
+
+
+![alt text](imagePourReadMe/imageQuestion13ProgrammeGenerationMatriceBayer.png)
+
+question14 :
+Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une
+matrice de Bayer d’ordre arbitraire?
+
+question14/reponse : 
+Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
+
+
+
 
 
 question 23 :
