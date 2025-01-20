@@ -7,16 +7,16 @@ use rand::Rng;
 struct DitherArgs {
 
     /// le fichier d’entrée
-    #[argh(positional)]
+    #[argh(positional , description = "route vers l'image a transformer")]
     input: String,
 
     // le fichier de sortie
-    #[argh(positional)]
+    #[argh(positional, description = "route vers l'endroit ou l'image va etre enregistre")]
     output: Option<String>,
 
 
     /// le mode d’opération
-    #[argh(subcommand)]
+    #[argh(subcommand,description = "le mode selectionner selon la modification d'image que vous souhaité")]
     mode: Mode
 }
 
@@ -28,6 +28,7 @@ enum Mode {
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
     Dithering(OptsDithering),
+    DitheringBayer(OptsDitheringBayer),
 
 }
 
@@ -48,9 +49,19 @@ struct OptsSeuilNoirBlanc {
 struct OptsDithering {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="seuil")]
+#[argh(subcommand, name="seuil",description = "mode permetant de mettre l'image en noir et blanc.")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
+
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name="ditheringBayer",description = "mode permetant de mettre l'image en noir et blanc.")]
+/// Rendu de l’image par seuillage monochrome.
+struct OptsDitheringBayer {
+    /// Couleur pour les pixels blancs (format: R,G,B)
+    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    order: String,
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "pixelBlanc", description = "mode de pixel blanc")]
@@ -59,11 +70,11 @@ struct OptsPixelBlanc {
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 
-#[argh(subcommand, name="dualColorMix")]
+#[argh(subcommand, name="dualColorMix",description = "mode permetant de modifier l'image selon un nombre de couleur de la palette.")]
 /// Rendu de l’image en mode pixel blanc.
 struct OptsDualColorMix {
     /// Couleur pour les pixels blancs (format: R,G,B)
-    #[argh(option, default = "String::from(\"0\")", description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    #[argh(option, default = "String::from(\"0\")", description = "nombre pour choisir le nombre de couleur de la palette")]
     nombre_palette: String,
 }
 
@@ -103,6 +114,9 @@ fn main() -> Result<(), ImageError> {
             let _ = mode_dithering(img, &args.output);
         }
 
+        Mode::DitheringBayer(opts_dithering_bayer) => {
+            let _ = apply_bayer_dithering(&img, &args.output, opts_dithering_bayer.order);
+        }
     }
 
     Ok(())
@@ -260,4 +274,55 @@ fn mode_dithering(img: DynamicImage, output: &Option<String>) -> Result<(), Imag
     let rgb_image = DynamicImage::ImageLuma8(thresholded).to_rgb8();
     save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
     Ok(())
+
+fn generate_bayer_matrix(order: i32) -> Vec<Vec<u32>> {
+    if order == 0 {
+        return vec![vec![0]];
+    }
+
+    let prev_matrix = generate_bayer_matrix(order - 1);
+    let size = prev_matrix.len();
+    let new_size = size * 2;
+    let mut matrix = vec![vec![0; new_size]; new_size];
+
+    for y in 0..size {
+        for x in 0..size {
+            let value = prev_matrix[y][x];
+            matrix[y][x] = 4 * value;
+            matrix[y][x + size] = 4 * value + 2;
+            matrix[y + size][x] = 4 * value + 3;
+            matrix[y + size][x + size] = 4 * value + 1;
+        }
+    }
+
+    matrix
+}
+
+// fn print_matrix(matrix: &Vec<Vec<u32>>) {
+//     for row in matrix {
+//         for &value in row {
+//             print!("{:2} ", value);
+//         }
+//         println!();
+//     }
+// }
+
+
+fn apply_bayer_dithering(img: &DynamicImage,output_path: &Option<String>, order: String) {
+    let bayer_matrix = generate_bayer_matrix(order.parse::<i32>().unwrap());
+    let matrix_size = bayer_matrix.len();
+    let (width, height) = img.dimensions();
+    let mut new_img = img.to_rgb8(); 
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            let luminance = (0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64) / 255.0;
+            let threshold = bayer_matrix[y as usize % matrix_size][x as usize % matrix_size] as f64 / (matrix_size * matrix_size) as f64;
+            let new_color = if luminance < threshold { BLACK } else { WHITE };
+            new_img.put_pixel(x, y, new_color);
+        }
+    }
+
+      let _ = save_image(DynamicImage::ImageRgb8(new_img), output_path);
 }

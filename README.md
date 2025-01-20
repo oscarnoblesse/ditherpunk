@@ -164,3 +164,39 @@ La partie suivante crée une nouvelle image en appliquant un tramage aléatoire.
 La luminosité du pixel est obtenue en divisant la valeur du pixel par 255.0 pour la normaliser entre 0 et 1.
 Un seuil aléatoire est généré entre 0 et 1.
 Si la luminosité du pixel est supérieure au seuil aléatoire, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
+
+question13 : 
+Déterminer 𝐵3
+question13/reponse : 
+j'ai utiliser un programme pour generais la matrice de bayer voici le resultat 
+
+![alt text](imagePourReadMe/imageQuestion13Matricebayer.png)
+
+voici la fonction utiliser pour generais la matrice de bayer. 
+
+
+![alt text](imagePourReadMe/imageQuestion13ProgrammeGenerationMatriceBayer.png)
+
+question14 :
+Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une
+matrice de Bayer d’ordre arbitraire?
+
+question14/reponse : 
+Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
+
+
+
+
+
+question 23 :
+
+    Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help.
+
+question 23/reponse : 
+    
+    Voici les description apres avoir utiliser la commande cargo run -- help. On peux voir que chaque element qui peux etre un mode ou un arguments a une description. 
+![alt text](./imagePourReadMe/imageQuestion23helpCargo.png)
+
+    Et voisi les description des parametre de l'un de nos mode. 
+
+![alt text](./imagePourReadMe/imageQuestion23HelpCargoMode.png)
