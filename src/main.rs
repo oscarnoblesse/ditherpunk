@@ -28,8 +28,7 @@ enum Mode {
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
     Dithering(OptsDithering),
-    DitheringBayer(OptsDitheringBayer),
-
+    ErrorDiffusion(OptsErrorDiffusion), 
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -43,6 +42,10 @@ struct OptsSeuilNoirBlanc {
     #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
     blanc: String,
 }
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "errorDiffusion", description = "Mode de diffusion d'erreur")]
+struct OptsErrorDiffusion {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "dithering", description = "Mode de tramage aléatoire")]
@@ -92,20 +95,17 @@ const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
-    let img = image::open(&args.input)?; 
+    let img = image::open(&args.input)?;
 
     match args.mode {
         Mode::Seuil(_) => {
             let _ = mode_seuil(img, &args.output);
         }
-
-
         Mode::PixelBlanc(_) => {
             let _ = mode_pixel_blanc(img, &args.output);
         }
-
         Mode::DualColorMix(opts_dual_color_mix) => {
-            let _ = mode_dual_couleur_pallete(img, &args.output , opts_dual_color_mix.nombre_palette );
+            let _ = mode_dual_couleur_pallete(img, &args.output, opts_dual_color_mix.nombre_palette);
         }
         Mode::SeuilNoirBlanc(opts_seuil) => {
             let _ = mode_seuil_noir_blanc(img, &args.output, opts_seuil);
@@ -113,9 +113,8 @@ fn main() -> Result<(), ImageError> {
         Mode::Dithering(_) => {
             let _ = mode_dithering(img, &args.output);
         }
-
-        Mode::DitheringBayer(opts_dithering_bayer) => {
-            let _ = apply_bayer_dithering(&img, &args.output, opts_dithering_bayer.order);
+        Mode::ErrorDiffusion(_) => {
+            let _ = mode_error_diffusion(img, &args.output);
         }
     }
 
@@ -271,9 +270,11 @@ fn mode_dithering(img: DynamicImage, output: &Option<String>) -> Result<(), Imag
         }
     });
 
+
     let rgb_image = DynamicImage::ImageLuma8(thresholded).to_rgb8();
     save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
     Ok(())
+}
 
 fn generate_bayer_matrix(order: i32) -> Vec<Vec<u32>> {
     if order == 0 {
@@ -325,4 +326,36 @@ fn apply_bayer_dithering(img: &DynamicImage,output_path: &Option<String>, order:
     }
 
       let _ = save_image(DynamicImage::ImageRgb8(new_img), output_path);
+}
+
+fn mode_error_diffusion(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
+    let grayscale = img.grayscale().to_luma8();
+    let (width, height) = grayscale.dimensions();
+    let mut buffer = grayscale.clone();
+
+    for y in 0..height {
+        for x in 0..width {
+            let old_pixel = buffer.get_pixel(x, y)[0];
+            let new_pixel = if old_pixel > 128 { 255 } else { 0 };
+            buffer.put_pixel(x, y, Luma([new_pixel]));
+
+            let error = old_pixel as i32 - new_pixel as i32;
+
+            if x + 1 < width {
+                let right_pixel = buffer.get_pixel(x + 1, y)[0] as i32;
+                let new_right_pixel = (right_pixel + (error * 4 / 10)) as i32;
+                buffer.put_pixel(x + 1, y, Luma([new_right_pixel.clamp(0, 255) as u8]));
+            }
+
+            if y + 1 < height {
+                let below_pixel = buffer.get_pixel(x, y + 1)[0] as i32;
+                let new_below_pixel = (below_pixel + (error * 6 / 10)) as i32;
+                buffer.put_pixel(x, y + 1, Luma([new_below_pixel.clamp(0, 255) as u8]));
+            }
+        }
+    }
+
+    let rgb_image = DynamicImage::ImageLuma8(buffer).to_rgb8();
+    save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
+    Ok(())
 }
