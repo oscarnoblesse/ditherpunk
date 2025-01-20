@@ -119,6 +119,8 @@ question9/reponse :
 
     Dans ce cas, la couleur bleue a une somme de 207, tandis que la couleur rouge a une somme de 419. Par conséquent, le pixel est plus proche de la couleur bleue.
 
+---
+
 question10:
     Implémenter le traitement
 
@@ -133,6 +135,7 @@ question10/reponse :
 
 ![alt text](./imagePourReadMe/imageQuestion10FonctionDeRecuperationDeLaPallette.png)
 
+---
 
 question11 : 
     Votre application doit se comporter correctement si on donne une palette vide. Vous
@@ -145,6 +148,7 @@ question11/reponse :
     cette commande permet de prendre un chiffre de minimum 2 et maximum 8 donc si l'utilisateur ne mais pas de paramettre ou d'une valeur de 1 alors cela crera une image a 2 couleur. 
 ![alt text](./imagePourReadMe/imageQuestion11Clamp.png)
 
+---
 
 question12 :
 Implémenter le tramage aléatoire des images.
@@ -165,6 +169,8 @@ La luminosité du pixel est obtenue en divisant la valeur du pixel par 255.0 pou
 Un seuil aléatoire est généré entre 0 et 1.
 Si la luminosité du pixel est supérieure au seuil aléatoire, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
 
+---
+
 question13 : 
 Déterminer 𝐵3
 question13/reponse : 
@@ -177,6 +183,8 @@ voici la fonction utiliser pour generais la matrice de bayer.
 
 ![alt text](imagePourReadMe/imageQuestion13ProgrammeGenerationMatriceBayer.png)
 
+---
+
 question14 :
 Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une
 matrice de Bayer d’ordre arbitraire?
@@ -184,9 +192,52 @@ matrice de Bayer d’ordre arbitraire?
 question14/reponse : 
 Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
 
+---
 
+question16/reponse : 
+La fonction mode_error_diffusion applique une diffusion d'erreur sur une image en niveaux de gris pour la binariser en utilisant un algorithme de diffusion d'erreur. Elle commence par convertir l'image en niveaux de gris, puis traite chaque pixel. Pour chaque pixel, elle calcule l'erreur entre la valeur actuelle et la valeur binarisée (soit 0, soit 255). Ensuite, elle diffuse cette erreur aux pixels voisins, en modifiant les pixels à droite et en dessous. Les erreurs sont propagées avec des coefficients spécifiques (4/10 pour les pixels à droite et 6/10 pour les pixels en dessous). Enfin, l'image traitée est convertie en format RGB et enregistrée dans un fichier de sortie.
 
+Etape 1 : Conversion en niveaux de gris : La première ligne convertit l'image en niveaux de gris (to_luma8), et les dimensions de l'image sont récupérées avec grayscale.dimensions().
 
+```rust
+let grayscale = img.grayscale().to_luma8();
+let (width, height) = grayscale.dimensions();
+```
+
+Etape 2 : Binarisation de chaque pixel : Pour chaque pixel de l'image, l'algorithme vérifie si la valeur du pixel est supérieure à 128 (dans ce cas, le pixel devient blanc, sinon il devient noir).
+
+```rust
+let old_pixel = buffer.get_pixel(x, y)[0];
+let new_pixel = if old_pixel > 128 { 255 } else { 0 };
+buffer.put_pixel(x, y, Luma([new_pixel]));
+```
+
+Etape 3 : Calcul et diffusion de l'erreur : Après la binarisation, l'erreur est calculée comme la différence entre la valeur ancienne du pixel et la valeur binarisée. Cette erreur est ensuite propagée aux pixels voisins, à droite et en dessous, avec des poids spécifiques
+
+Diffusion de l'erreur vers le pixel à droite :
+
+```rust
+let right_pixel = buffer.get_pixel(x + 1, y)[0] as i32;
+let new_right_pixel = (right_pixel + (error * 4 / 10)) as i32;
+buffer.put_pixel(x + 1, y, Luma([new_right_pixel.clamp(0, 255) as u8]));
+```
+
+Diffusion de l'erreur vers le pixel en dessous :
+
+```rust
+let below_pixel = buffer.get_pixel(x, y + 1)[0] as i32;
+let new_below_pixel = (below_pixel + (error * 6 / 10)) as i32;
+buffer.put_pixel(x, y + 1, Luma([new_below_pixel.clamp(0, 255) as u8]));
+```
+
+Etape 4 :Conversion en RGB et sauvegarde : Après avoir modifié tous les pixels, l'image est convertie en format RGB et enregistrée dans le fichier spécifié.
+
+```rust
+let rgb_image = DynamicImage::ImageLuma8(buffer).to_rgb8();
+save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
+```
+
+---
 
 question 23 :
 
