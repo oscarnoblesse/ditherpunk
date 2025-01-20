@@ -1,5 +1,5 @@
 use argh::FromArgs;
-use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer, Luma};
+use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer, Luma, Rgba};
 use rand::Rng;
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -28,7 +28,8 @@ enum Mode {
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
     Dithering(OptsDithering),
-    ErrorDiffusion(OptsErrorDiffusion), 
+    ErrorDiffusion(OptsErrorDiffusion),
+    ErrorDiffusionPalette(OptsErrorDiffusionPalette), 
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -81,6 +82,13 @@ struct OptsDualColorMix {
     nombre_palette: String,
 }
 
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "errorDiffusionPalette", description = "Mode de diffusion d'erreur avec palette")]
+struct OptsErrorDiffusionPalette {
+    /// Nombre de couleurs dans la palette
+    #[argh(option, description = "nombre de couleurs dans la palette")]
+    nombre_palette: String,
+}
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
 const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
@@ -115,6 +123,9 @@ fn main() -> Result<(), ImageError> {
         }
         Mode::ErrorDiffusion(_) => {
             let _ = mode_error_diffusion(img, &args.output);
+        }
+        Mode::ErrorDiffusionPalette(_) => {
+            let _ = mode_error_diffusion_palette(img, &args.output);
         }
     }
 
@@ -357,5 +368,87 @@ fn mode_error_diffusion(img: DynamicImage, output: &Option<String>) -> Result<()
 
     let rgb_image = DynamicImage::ImageLuma8(buffer).to_rgb8();
     save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
+    Ok(())
+}
+
+fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
+    // Définir la palette de couleurs (noir, blanc, rouge, bleu, vert)
+    let palette = vec![
+        Rgba([0, 0, 0, 255]),    // Noir
+        Rgba([255, 255, 255, 255]), // Blanc
+        Rgba([255, 0, 0, 255]),    // Rouge
+        Rgba([0, 0, 255, 255]),    // Bleu
+        Rgba([0, 255, 0, 255]),    // Vert
+    ];
+
+    // Convertir l'image en niveaux de gris et obtenir ses dimensions
+    let grayscale = img.to_rgba8();
+    let (width, height) = grayscale.dimensions();
+    let mut buffer = grayscale.clone();
+
+    // Fonction pour calculer la distance euclidienne entre deux couleurs
+    fn color_distance(c1: &Rgba<u8>, c2: &Rgba<u8>) -> f32 {
+        let r_diff = c1[0] as f32 - c2[0] as f32;
+        let g_diff = c1[1] as f32 - c2[1] as f32;
+        let b_diff = c1[2] as f32 - c2[2] as f32;
+        (r_diff * r_diff + g_diff * g_diff + b_diff * b_diff).sqrt()
+    }
+
+    // Parcourir chaque pixel de l'image
+    for y in 0..height {
+        for x in 0..width {
+            let old_pixel = buffer.get_pixel(x, y).0;
+
+            // Trouver la couleur la plus proche de la palette
+            let mut closest_color = &palette[0];
+            let mut min_distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), &palette[0]);
+
+            for color in &palette[1..] {
+                let distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), color);
+                if distance < min_distance {
+                    closest_color = color;
+                    min_distance = distance;
+                }
+            }
+
+            // Remplacer le pixel par la couleur la plus proche
+            buffer.put_pixel(x, y, *closest_color);
+
+            // Calculer l'erreur (différence entre la couleur originale et la couleur de la palette)
+            let error = Rgba([
+                old_pixel[0] as i32 - closest_color[0] as i32,
+                old_pixel[1] as i32 - closest_color[1] as i32,
+                old_pixel[2] as i32 - closest_color[2] as i32,
+                0,
+            ]);
+
+            // Diffuser l'erreur vers le voisin à droite, s'il existe
+            if x + 1 < width {
+                let right_pixel = buffer.get_pixel(x + 1, y).0;
+                let new_right_pixel = Rgba([
+                    (right_pixel[0] as i32 + (error[0] * 4 / 10)) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 4 / 10)) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 4 / 10)) as u8,
+                    255,
+                ]);
+                buffer.put_pixel(x + 1, y, new_right_pixel);
+            }
+
+            // Diffuser l'erreur vers le voisin en dessous, s'il existe
+            if y + 1 < height {
+                let below_pixel = buffer.get_pixel(x, y + 1).0;
+                let new_below_pixel = Rgba([
+                    (below_pixel[0] as i32 + (error[0] * 6 / 10)) as u8,
+                    (below_pixel[1] as i32 + (error[1] * 6 / 10)) as u8,
+                    (below_pixel[2] as i32 + (error[2] * 6 / 10)) as u8,
+                    255,
+                ]);
+                buffer.put_pixel(x, y + 1, new_below_pixel);
+            }
+        }
+    }
+
+    // Sauvegarder l'image traitée
+    save_image(DynamicImage::ImageRgba8(buffer), output)?;
     Ok(())
 }
