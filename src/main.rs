@@ -1,5 +1,6 @@
 use argh::FromArgs;
-use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer};
+use image::{GenericImageView, ImageError, DynamicImage, ImageBuffer, Luma};
+use rand::Rng;
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -26,6 +27,7 @@ enum Mode {
     PixelBlanc(OptsPixelBlanc),
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
+    Dithering(OptsDithering),
     DitheringBayer(OptsDitheringBayer),
 
 }
@@ -41,6 +43,10 @@ struct OptsSeuilNoirBlanc {
     #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
     blanc: String,
 }
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "dithering", description = "Mode de tramage aléatoire")]
+struct OptsDithering {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name="seuil",description = "mode permetant de mettre l'image en noir et blanc.")]
@@ -103,6 +109,9 @@ fn main() -> Result<(), ImageError> {
         }
         Mode::SeuilNoirBlanc(opts_seuil) => {
             let _ = mode_seuil_noir_blanc(img, &args.output, opts_seuil);
+        }
+        Mode::Dithering(_) => {
+            let _ = mode_dithering(img, &args.output);
         }
 
         Mode::DitheringBayer(opts_dithering_bayer) => {
@@ -247,6 +256,24 @@ fn get_color_palette(nombre_de_la_pallette: String) -> Vec<image::Rgb<u8>> {
     palette
 }
 
+fn mode_dithering(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
+    let grayscale = img.grayscale().to_luma8();
+    let mut rng = rand::thread_rng();
+
+    let thresholded = ImageBuffer::from_fn(grayscale.width(), grayscale.height(), |x, y| {
+        let pixel = grayscale.get_pixel(x, y);
+        let luminosity = pixel[0] as f32 / 255.0;
+        let threshold: f32 = rng.gen();
+        if luminosity > threshold {
+            Luma([255])
+        } else {
+            Luma([0])
+        }
+    });
+
+    let rgb_image = DynamicImage::ImageLuma8(thresholded).to_rgb8();
+    save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
+    Ok(())
 
 fn generate_bayer_matrix(order: i32) -> Vec<Vec<u32>> {
     if order == 0 {
