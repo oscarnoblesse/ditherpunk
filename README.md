@@ -146,5 +146,21 @@ question11/reponse :
 ![alt text](./imagePourReadMe/imageQuestion11Clamp.png)
 
 
+question12 :
+Implémenter le tramage aléatoire des images.
 
+question12/reponse : 
 
+La fonction mode_dithering convertit donc l'image en niveaux de gris, puis applique un seuil aléatoire à chaque pixel pour décider s'il doit être blanc ou noir. Nous utilisons la bibliothèque rand pour générer des nombres aléatoires.
+
+Voici la méthode permettant de faire cela : 
+
+![alt text](./imagePourReadMe/question12.png)
+
+La ligne : let mut rng = rand::thread_rng(); permet de générer des nombres aléatoires.
+
+La partie suivante crée une nouvelle image en appliquant un tramage aléatoire. Pour chaque de la facon suivante :
+
+La luminosité du pixel est obtenue en divisant la valeur du pixel par 255.0 pour la normaliser entre 0 et 1.
+Un seuil aléatoire est généré entre 0 et 1.
+Si la luminosité du pixel est supérieure au seuil aléatoire, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
