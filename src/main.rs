@@ -26,6 +26,7 @@ enum Mode {
     PixelBlanc(OptsPixelBlanc),
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
+    DitheringBayer(OptsDitheringBayer),
 
 }
 
@@ -45,6 +46,16 @@ struct OptsSeuilNoirBlanc {
 #[argh(subcommand, name="seuil",description = "mode permetant de mettre l'image en noir et blanc.")]
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
+
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name="ditheringBayer",description = "mode permetant de mettre l'image en noir et blanc.")]
+/// Rendu de l’image par seuillage monochrome.
+struct OptsDitheringBayer {
+    /// Couleur pour les pixels blancs (format: R,G,B)
+    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    order: String,
+}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "pixelBlanc", description = "mode de pixel blanc")]
@@ -77,11 +88,6 @@ fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
     let img = image::open(&args.input)?; 
 
-    let order = 3;
-    let bayer_matrix = generate_bayer_matrix(order);
-    println!("Bayer Matrix of order {}:", order);
-    print_matrix(&bayer_matrix);
-
     match args.mode {
         Mode::Seuil(_) => {
             let _ = mode_seuil(img, &args.output);
@@ -99,6 +105,9 @@ fn main() -> Result<(), ImageError> {
             let _ = mode_seuil_noir_blanc(img, &args.output, opts_seuil);
         }
 
+        Mode::DitheringBayer(opts_dithering_bayer) => {
+            let _ = apply_bayer_dithering(&img, &args.output, opts_dithering_bayer.order);
+        }
     }
 
     Ok(())
@@ -239,7 +248,7 @@ fn get_color_palette(nombre_de_la_pallette: String) -> Vec<image::Rgb<u8>> {
 }
 
 
-fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
+fn generate_bayer_matrix(order: i32) -> Vec<Vec<u32>> {
     if order == 0 {
         return vec![vec![0]];
     }
@@ -262,11 +271,31 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
     matrix
 }
 
-fn print_matrix(matrix: &Vec<Vec<u32>>) {
-    for row in matrix {
-        for &value in row {
-            print!("{:2} ", value);
+// fn print_matrix(matrix: &Vec<Vec<u32>>) {
+//     for row in matrix {
+//         for &value in row {
+//             print!("{:2} ", value);
+//         }
+//         println!();
+//     }
+// }
+
+
+fn apply_bayer_dithering(img: &DynamicImage,output_path: &Option<String>, order: String) {
+    let bayer_matrix = generate_bayer_matrix(order.parse::<i32>().unwrap());
+    let matrix_size = bayer_matrix.len();
+    let (width, height) = img.dimensions();
+    let mut new_img = img.to_rgb8(); 
+
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = img.get_pixel(x, y);
+            let luminance = (0.299 * pixel[0] as f64 + 0.587 * pixel[1] as f64 + 0.114 * pixel[2] as f64) / 255.0;
+            let threshold = bayer_matrix[y as usize % matrix_size][x as usize % matrix_size] as f64 / (matrix_size * matrix_size) as f64;
+            let new_color = if luminance < threshold { BLACK } else { WHITE };
+            new_img.put_pixel(x, y, new_color);
         }
-        println!();
     }
+
+      let _ = save_image(DynamicImage::ImageRgb8(new_img), output_path);
 }
