@@ -193,6 +193,18 @@ question14/reponse :
 Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
 
 ---
+question 15 
+Implémenter le tramage par matrice de Bayer.
+
+question15/reponse
+J'ai utiliser ce programme pour cree le tramage  avec la matrice bayer et voici le resultat.
+
+![alt text](./imagePourReadMe/ImageQuestion15ProgrammeApplicationBayer.png)
+![alt text](./imagePourReadMe/imageQuestion15ImageSorti.png)
+
+commande utiliser pour lancer le programme : 
+
+---
 
 question16/reponse : 
 La fonction mode_error_diffusion applique une diffusion d'erreur sur une image en niveaux de gris pour la binariser en utilisant un algorithme de diffusion d'erreur. Elle commence par convertir l'image en niveaux de gris, puis traite chaque pixel. Pour chaque pixel, elle calcule l'erreur entre la valeur actuelle et la valeur binarisée (soit 0, soit 255). Ensuite, elle diffuse cette erreur aux pixels voisins, en modifiant les pixels à droite et en dessous. Les erreurs sont propagées avec des coefficients spécifiques (4/10 pour les pixels à droite et 6/10 pour les pixels en dessous). Enfin, l'image traitée est convertie en format RGB et enregistrée dans un fichier de sortie.
