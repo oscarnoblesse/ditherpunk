@@ -56,7 +56,9 @@ question6 :
 question6/reponse
 
     Pour recuperais la luminosité d'un pixel une fonction deja implementais peux etre utiliser elle s'appele .to_luma() une autre facon et d'utiliser la recommandation 709 
-![alt text](image.png)
+
+![alt text](./imagePourReadMe/question6FormulLuminance.png)
+
     Pondérations de luminance : Les coefficients 0.2126, 0.7152 et 0.0722 viennent de la norme ITU-R BT.709, qui est utilisée pour convertir une image en niveaux de gris. Conversion explicite : Les valeurs des composantes (rouge, vert, bleu) sont converties en f32 pour faire les multiplications, puis la luminance totale est arrondie et convertie en u8. Utilisation directe du tableau : Les valeurs pixel[0], pixel[1] et pixel[2] correspondent respectivement aux composantes rouge, vert et bleu.
 
     Voici le programme baser sur cette recommandation
