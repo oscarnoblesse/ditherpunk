@@ -29,7 +29,7 @@ Question4 :
     Afficher dans le terminal la couleur du pixel (32, 52) de l’image de votre choix.
 
 Question4 reponse : 
-    Pour recuperais un pixel de mon image j'ai utiliser ce code la premier ligne permet de convertire mon image en rgb8. Puis la deuxieme ligne permet de recuperais mon pixel donc cezs valeur RGB. 
+    Pour recuperais un pixel de mon image j'ai utiliser ce code la premier ligne permet de convertire mon image en rgb8. Puis la deuxieme ligne permet de recuperais mon pixel donc ces valeur RGB. 
     ![alt text](imagePourReadMe/image.png)
     ![alt text](imagePourReadMe/image-2.png)
 
@@ -39,9 +39,14 @@ Question5 :
     Passer un pixel sur deux d’une image en blanc. Est-ce que l’image obtenue est reconnaissable?
 
 Question5 reponse : 
+    
     oui l'image optenu est reconnaissable. Pour le faire il suffisais de parcourir tout les pixel est une fois que la somme de x et y etat modulo 2 alors le programme transformer le pixel en blanc. 
-    ![alt text](imagePourReadMe/imageInitiale.jpeg)
-    ![alt text](imagePourReadMe/imageQuestion5PixelBlanc.png)
+![alt text](imagePourReadMe/imageInitiale.jpeg)
+![alt text](imagePourReadMe/imageQuestion5PixelBlanc.png)
+
+    Pour realiser cette image j'ai utiliser le programme suivant 
+
+![alt text](./imagePourReadMe/imageQuestion5Programme.png)
     
 ---
 question6 :
@@ -49,11 +54,16 @@ question6 :
 
 
 question6/reponse
-    Pour recuperais la luminosité d'un pixel une fonction deja implementais peux etre utiliser elle s'appele .to_luma()
-    ![alt text](imagePourReadMe/question6.png)
-    Pondérations de luminance : Les coefficients 0.2126, 0.7152 et 0.0722 proviennent de la norme ITU-R BT.709, utilisée pour convertir une image en niveaux de gris.
-    Conversion explicite : Les valeurs des composantes (rouge, vert, bleu) sont converties en f32 pour effectuer les multiplications, puis la luminance totale est arrondie et castée en u8.
-    Utilisation directe du tableau : Les valeurs pixel[0], pixel[1] et pixel[2] correspondent respectivement aux composantes rouge, vert et bleu.
+
+    Pour recuperais la luminosité d'un pixel une fonction deja implementais peux etre utiliser elle s'appele .to_luma() une autre facon et d'utiliser la recommandation 709 
+
+![alt text](./imagePourReadMe/question6FormulLuminance.png)
+
+    Pondérations de luminance : Les coefficients 0.2126, 0.7152 et 0.0722 viennent de la norme ITU-R BT.709, qui est utilisée pour convertir une image en niveaux de gris. Conversion explicite : Les valeurs des composantes (rouge, vert, bleu) sont converties en f32 pour faire les multiplications, puis la luminance totale est arrondie et convertie en u8. Utilisation directe du tableau : Les valeurs pixel[0], pixel[1] et pixel[2] correspondent respectivement aux composantes rouge, vert et bleu.
+
+    Voici le programme baser sur cette recommandation
+![alt text](imagePourReadMe/question6.png)
+   
 
 ---
 
@@ -62,17 +72,30 @@ question7 :
 
 question7/reponse
     ![alt text](imagePourReadMe/question7.png)
-    Nous convertissons l'image en niveaux de gris. La méthode grayscale convertit l'image en niveaux de gris. Ensuite nous créons une nouvelle image en appliquant un seuillage binaire basé sur la luminosité des pixels. La fonction get_pixel_luminosity est utilisée pour obtenir la luminosité d'un pixel. Pour chaque pixel, si la valeur de luminosité est supérieure à 128, le pixel est défini comme blanc (Luma([255])), sinon il est défini comme noir (Luma([0])).
-    Pour finr, nous convertissons l'image en niveaux de gris (Luma) en une image RGB. Cela est nécessaire pour que l'image puisse être sauvegardée correctement en tant qu'image RGB.
+    La méthode mode_seuil convertit l'image en niveaux de gris, puis applique un seuillage binaire pour obtenir une image en noir et blanc. Voici comment cela fonctionne :
+
+    Conversion en niveaux de gris : L'image est d'abord convertie en niveaux de gris en utilisant la méthode grayscale, puis convertie en format RGB avec to_rgb8.
+
+    Application du seuillage binaire : Une nouvelle image est créée en appliquant un seuillage binaire basé sur la luminosité des pixels. La fonction get_pixel_luminosity est utilisée pour obtenir la luminosité de chaque pixel. Si la luminosité est supérieure à 128, le pixel est défini comme blanc (Rgb([255, 255, 255])), sinon il est défini comme noir (Rgb([0, 0, 0])).
+
+    Conversion en image RGB : L'image résultante est convertie en une image RGB (DynamicImage::ImageRgb8) pour pouvoir être sauvegardée correctement.
+
+    Affichage de la valeur d'un pixel : La valeur du pixel à la position (32, 50) est affichée pour vérification.
+
+    Sauvegarde de l'image : L'image est sauvegardée en utilisant la fonction save_image.
 
 ---
-
 question 8 
+
+    Permettre à l’utilisateurice de remplacer “noir” et “blanc” par une paire de couleurs au choix.
+
+question 8/reponse
+
     Nous avons donc modifié la fonction mode_seuil pour permettre à l'utilisateur de spécifier des couleurs personnalisées pour les pixels noirs et blancs. Les couleurs sont spécifiées en utilisant le format R,G,B et sont passées en tant qu'options de ligne de commande. Voici comment nous avons fait : 
-    ![alt text](imagePourReadMe/question8(1).png)
+![alt text](imagePourReadMe/question8(1).png)
     Nous avons donc rajouté deux paramètres (noir, blanc) dans la struct OptsSeuil, la struct contenant les paramètres de la méthode seuil. Nous pouvons donc désormais dans la commande spécifié ces deux paramètres pour pouvoir changer la couleur.
     Nous avons ensuite modifié la fonction 'mode_seuil' pour pouvoir changer de couleur les pixels de l'image avec les couleurs spécifié en paramètre. Voici comment nous avons fait :
-    ![alt text](imagePourReadMe/question8(2).png)
+![alt text](imagePourReadMe/question8(2).png)
     Nous pouvons donc voir dans cette méthode que nous utilisons les arguments de la ligne de commande pour si la luminosité du pixel est supérieur à 128, le pixel devient de la couleur du premier argument et si supérieur du deuxième.
 
 ---
@@ -127,7 +150,7 @@ question10:
 
 question10/reponse : 
     voisi la fonction qui permet de modifier l'image avec les deux couleur donner par l'utilisateur.
-    ![alt text](./imagePourReadMe/imageQuestion10ProgrammePrincipal.png)
+![alt text](./imagePourReadMe/imageQuestion10ProgrammePrincipal.png)
 
     Cette fonction utilise deux autre fonction une pour recuperais le rgb des couleur de la pallette donner par l'utilisateur et une autre pour recuperais la valeur de chaque pixel pour chaque couleur de la pallette demander. Ce qui permet de connaitre quelle couleur et la plus proche du pixel selectionnais.
 
@@ -183,6 +206,26 @@ voici la fonction utiliser pour generais la matrice de bayer.
 
 ![alt text](imagePourReadMe/imageQuestion13ProgrammeGenerationMatriceBayer.png)
 
+Pour cree ce programme nous avons utiliser la formule donnée dans l'exercice.
+
+Voici une petit explication de comment marche notre programme.
+
+Cas de base : Si l'ordre est 0, la fonction retourne une matrice 1x1 contenant 0. C'est la matrice de Bayer la plus simple.
+
+Récursion : Pour un ordre supérieur à 0, la fonction appelle récursivement generate_bayer_matrix pour obtenir la matrice de l'ordre précédent. Cette matrice est stockée dans prev_matrix.
+
+Calcul de la taille : La taille de la nouvelle matrice est le double de celle de la matrice précédente. Par exemple, si la matrice précédente est de taille 2x2, la nouvelle matrice sera de taille 4x4.
+
+Initialisation de la nouvelle matrice : Une nouvelle matrice de la taille calculée est initialisée avec des zéros. Cette matrice est représentée par un vecteur de vecteurs (Vec<Vec<u32>>).
+
+Remplissage de la nouvelle matrice : La nouvelle matrice est remplie en utilisant les valeurs de la matrice précédente et en appliquant des calculs spécifiques pour chaque quadrant :
+
+Quadrant supérieur gauche : Les valeurs de ce quadrant sont obtenues en multipliant les valeurs de la matrice précédente par 4.
+Quadrant supérieur droit : Les valeurs de ce quadrant sont obtenues en multipliant les valeurs de la matrice précédente par 4 et en ajoutant 2.
+Quadrant inférieur gauche : Les valeurs de ce quadrant sont obtenues en multipliant les valeurs de la matrice précédente par 4 et en ajoutant 3.
+Quadrant inférieur droit : Les valeurs de ce quadrant sont obtenues en multipliant les valeurs de la matrice précédente par 4 et en ajoutant 1.
+Retour de la nouvelle matrice : Une fois que tous les quadrants ont été remplis, la nouvelle matrice est retournée
+
 ---
 
 question14 :
@@ -190,12 +233,34 @@ Quel type de données utiliser pour représenter la matrice de Bayer? Comment cr
 matrice de Bayer d’ordre arbitraire?
 
 question14/reponse : 
-Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
+
+    Pour représenter la matrice de Bayer, nous utilisons le type de données Vec<Vec<u32>> car il permet de gérer une matrice en deux dimensions de manière flexible. Pour créer une matrice de Bayer d'ordre arbitraire, nous utilisons une fonction récursive qui construit la matrice en suivant la définition donnée, en partant de la matrice d'ordre 0 et en ajoutant des blocs pour chaque ordre supérieur.
 
 ---
+question 15 
+Implémenter le tramage par matrice de Bayer.
 
+question15/reponse
+J'ai utiliser ce programme pour cree le tramage  avec la matrice bayer et voici le resultat.
+
+![alt text](./imagePourReadMe/ImageQuestion15ProgrammeApplicationBayer.png)
+
+explication de la realisation de ce programme 
+
+La fonction apply_bayer_dithering applique le tramage par matrice de Bayer à une image. Elle commence par générer une matrice de Bayer d'un ordre spécifié, convertissant l'ordre de type String en i32 et appelant la fonction generate_bayer_matrix. Ensuite, elle obtient les dimensions de la matrice et de l'image, et convertit l'image en format RGB pour permettre la modification des pixels. La fonction parcourt chaque pixel de l'image, calcule la luminance du pixel en utilisant les coefficients 0.299, 0.587 et 0.114 pour les composantes rouge, verte et bleue, et obtient le seuil correspondant dans la matrice de Bayer. Si la luminance du pixel est inférieure au seuil, le pixel est défini comme noir, sinon il est défini comme blanc. La nouvelle couleur du pixel est mise à jour dans l'image. Enfin, l'image modifiée est sauvegardée en utilisant la fonction save_image.
+
+![alt text](./imagePourReadMe/imageQuestion15ImageSorti.png)
+
+commande utiliser pour lancer le programme : cargo run ./image/iut.png ./image/imageDitheringBayer.png ditheringBayer --order 4
+
+---
+question 16
+
+    Implémenter un mécanisme de diffusion d’erreur suivant la matrice ( ∗.0.50.50 ) pour les images en
+    noir et blanc
 question16/reponse : 
-La fonction mode_error_diffusion applique une diffusion d'erreur sur une image en niveaux de gris pour la binariser en utilisant un algorithme de diffusion d'erreur. Elle commence par convertir l'image en niveaux de gris, puis traite chaque pixel. Pour chaque pixel, elle calcule l'erreur entre la valeur actuelle et la valeur binarisée (soit 0, soit 255). Ensuite, elle diffuse cette erreur aux pixels voisins, en modifiant les pixels à droite et en dessous. Les erreurs sont propagées avec des coefficients spécifiques (4/10 pour les pixels à droite et 6/10 pour les pixels en dessous). Enfin, l'image traitée est convertie en format RGB et enregistrée dans un fichier de sortie.
+
+    La fonction mode_error_diffusion applique une diffusion d'erreur sur une image en niveaux de gris pour la binariser en utilisant un algorithme de diffusion d'erreur. Elle commence par convertir l'image en niveaux de gris, puis traite chaque pixel. Pour chaque pixel, elle calcule l'erreur entre la valeur actuelle et la valeur binarisée (soit 0, soit 255). Ensuite, elle diffuse cette erreur aux pixels voisins, en modifiant les pixels à droite et en dessous. Les erreurs sont propagées avec des coefficients spécifiques (4/10 pour les pixels à droite et 6/10 pour les pixels en dessous). Enfin, l'image traitée est convertie en format RGB et enregistrée dans un fichier de sortie.
 
 Etape 1 : Conversion en niveaux de gris : La première ligne convertit l'image en niveaux de gris (to_luma8), et les dimensions de l'image sont récupérées avec grayscale.dimensions().
 
