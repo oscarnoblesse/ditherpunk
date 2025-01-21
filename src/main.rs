@@ -28,6 +28,7 @@ enum Mode {
     DualColorMix(OptsDualColorMix),
     SeuilNoirBlanc(OptsSeuilNoirBlanc),
     Dithering(OptsDithering),
+    DitheringBayer(OptsDitheringBayer),
     ErrorDiffusion(OptsErrorDiffusion), 
 }
 
@@ -56,15 +57,15 @@ struct OptsDithering {}
 /// Rendu de l’image par seuillage monochrome.
 struct OptsSeuil {}
 
-
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name="ditheringBayer",description = "mode permetant de mettre l'image en noir et blanc.")]
-/// Rendu de l’image par seuillage monochrome.
+/// Rendu de l'image par seuillage monochrome.
 struct OptsDitheringBayer {
     /// Couleur pour les pixels blancs (format: R,G,B)
     #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
     order: String,
 }
+
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "pixelBlanc", description = "mode de pixel blanc")]
@@ -80,6 +81,8 @@ struct OptsDualColorMix {
     #[argh(option, default = "String::from(\"0\")", description = "nombre pour choisir le nombre de couleur de la palette")]
     nombre_palette: String,
 }
+
+
 
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
@@ -113,6 +116,10 @@ fn main() -> Result<(), ImageError> {
         Mode::Dithering(_) => {
             let _ = mode_dithering(img, &args.output);
         }
+        Mode::DitheringBayer(opts_dithering_bayer) => {
+            let _ = apply_bayer_dithering(&img, &args.output, opts_dithering_bayer.order);
+        }
+	
         Mode::ErrorDiffusion(_) => {
             let _ = mode_error_diffusion(img, &args.output);
         }

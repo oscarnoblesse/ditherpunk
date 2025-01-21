@@ -202,7 +202,7 @@ J'ai utiliser ce programme pour cree le tramage  avec la matrice bayer et voici 
 ![alt text](./imagePourReadMe/ImageQuestion15ProgrammeApplicationBayer.png)
 ![alt text](./imagePourReadMe/imageQuestion15ImageSorti.png)
 
-commande utiliser pour lancer le programme : 
+commande utiliser pour lancer le programme : cargo run ./image/iut.png ./image/imageDitheringBayer.png ditheringBayer --order 4
 
 ---
 
