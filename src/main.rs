@@ -85,9 +85,6 @@ struct OptsDualColorMix {
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 #[argh(subcommand, name = "errorDiffusionPalette", description = "Mode de diffusion d'erreur avec palette")]
 struct OptsErrorDiffusionPalette {
-    /// Nombre de couleurs dans la palette
-    #[argh(option, description = "nombre de couleurs dans la palette")]
-    nombre_palette: String,
 }
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
@@ -415,35 +412,35 @@ fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> R
             buffer.put_pixel(x, y, *closest_color);
 
             // Calculer l'erreur (différence entre la couleur originale et la couleur de la palette)
-            let error = Rgba([
+            let error = [
                 old_pixel[0] as i32 - closest_color[0] as i32,
                 old_pixel[1] as i32 - closest_color[1] as i32,
                 old_pixel[2] as i32 - closest_color[2] as i32,
-                0,
-            ]);
+            ];
 
-            // Diffuser l'erreur vers le voisin à droite, s'il existe
+            // Diffuser l'erreur vers les deux voisins (droite et en dessous)
+            // Diffusion 50% à droite
             if x + 1 < width {
                 let right_pixel = buffer.get_pixel(x + 1, y).0;
-                let new_right_pixel = Rgba([
-                    (right_pixel[0] as i32 + (error[0] * 4 / 10)) as u8,
-                    (right_pixel[1] as i32 + (error[1] * 4 / 10)) as u8,
-                    (right_pixel[2] as i32 + (error[2] * 4 / 10)) as u8,
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + (error[0] * 5 / 10)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 5 / 10)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 5 / 10)).clamp(0, 255) as u8,
                     255,
-                ]);
-                buffer.put_pixel(x + 1, y, new_right_pixel);
+                ];
+                buffer.put_pixel(x + 1, y, Rgba(new_right_pixel));
             }
 
-            // Diffuser l'erreur vers le voisin en dessous, s'il existe
+            // Diffusion 50% en dessous
             if y + 1 < height {
                 let below_pixel = buffer.get_pixel(x, y + 1).0;
-                let new_below_pixel = Rgba([
-                    (below_pixel[0] as i32 + (error[0] * 6 / 10)) as u8,
-                    (below_pixel[1] as i32 + (error[1] * 6 / 10)) as u8,
-                    (below_pixel[2] as i32 + (error[2] * 6 / 10)) as u8,
+                let new_below_pixel = [
+                    (below_pixel[0] as i32 + (error[0] * 5 / 10)).clamp(0, 255) as u8,
+                    (below_pixel[1] as i32 + (error[1] * 5 / 10)).clamp(0, 255) as u8,
+                    (below_pixel[2] as i32 + (error[2] * 5 / 10)).clamp(0, 255) as u8,
                     255,
-                ]);
-                buffer.put_pixel(x, y + 1, new_below_pixel);
+                ];
+                buffer.put_pixel(x, y + 1, Rgba(new_below_pixel));
             }
         }
     }
