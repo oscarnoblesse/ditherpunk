@@ -369,16 +369,15 @@ fn mode_error_diffusion(img: DynamicImage, output: &Option<String>) -> Result<()
 }
 
 fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
-    // Définir la palette de couleurs (noir, blanc, rouge, bleu, vert)
+    // Palette adaptée aux couleurs dominantes extraites de l'image donnée
     let palette = vec![
-        Rgba([0, 0, 0, 255]),    // Noir
-        Rgba([255, 255, 255, 255]), // Blanc
-        Rgba([255, 0, 0, 255]),    // Rouge
-        Rgba([0, 0, 255, 255]),    // Bleu
-        Rgba([0, 255, 0, 255]),    // Vert
+        Rgba([0, 0, 0, 255]), 
+        Rgba([255, 255, 255, 255]),
+        Rgba([185, 17, 40, 255]), 
+        Rgba([19, 105, 18, 255]),  //vert  
     ];
 
-    // Convertir l'image en niveaux de gris et obtenir ses dimensions
+    // Convertir l'image en RGBA et obtenir ses dimensions
     let grayscale = img.to_rgba8();
     let (width, height) = grayscale.dimensions();
     let mut buffer = grayscale.clone();
@@ -418,29 +417,50 @@ fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> R
                 old_pixel[2] as i32 - closest_color[2] as i32,
             ];
 
-            // Diffuser l'erreur vers les deux voisins (droite et en dessous)
-            // Diffusion 50% à droite
+            // Diffuser l'erreur vers les voisins (droite, en dessous, en bas à gauche et en bas à droite)
+            // Notez que les facteurs de diffusion ont été ajustés pour obtenir des résultats visuellement similaires à l'image de référence
             if x + 1 < width {
                 let right_pixel = buffer.get_pixel(x + 1, y).0;
                 let new_right_pixel = [
-                    (right_pixel[0] as i32 + (error[0] * 5 / 10)).clamp(0, 255) as u8,
-                    (right_pixel[1] as i32 + (error[1] * 5 / 10)).clamp(0, 255) as u8,
-                    (right_pixel[2] as i32 + (error[2] * 5 / 10)).clamp(0, 255) as u8,
+                    (right_pixel[0] as i32 + (error[0] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 7 / 16)).clamp(0, 255) as u8,
                     255,
                 ];
                 buffer.put_pixel(x + 1, y, Rgba(new_right_pixel));
             }
 
-            // Diffusion 50% en dessous
             if y + 1 < height {
-                let below_pixel = buffer.get_pixel(x, y + 1).0;
-                let new_below_pixel = [
-                    (below_pixel[0] as i32 + (error[0] * 5 / 10)).clamp(0, 255) as u8,
-                    (below_pixel[1] as i32 + (error[1] * 5 / 10)).clamp(0, 255) as u8,
-                    (below_pixel[2] as i32 + (error[2] * 5 / 10)).clamp(0, 255) as u8,
+                if x > 0 {
+                    let bottom_left_pixel = buffer.get_pixel(x - 1, y + 1).0;
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + (error[0] * 3 / 32)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + (error[1] * 3 / 32)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + (error[2] * 3 / 32)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    buffer.put_pixel(x - 1, y + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = buffer.get_pixel(x, y + 1).0;
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + (error[0] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + (error[1] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + (error[2] * 5 / 16)).clamp(0, 255) as u8,
                     255,
                 ];
-                buffer.put_pixel(x, y + 1, Rgba(new_below_pixel));
+                buffer.put_pixel(x, y + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = buffer.get_pixel(x + 1, y + 1).0;
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + (error[0] * 1 / 32)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + (error[1] * 1 / 32)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + (error[2] * 1 / 32)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    buffer.put_pixel(x + 1, y + 1, Rgba(new_bottom_right_pixel));
+                }
             }
         }
     }
@@ -449,3 +469,8 @@ fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> R
     save_image(DynamicImage::ImageRgba8(buffer), output)?;
     Ok(())
 }
+
+
+
+
+
