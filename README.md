@@ -141,7 +141,7 @@ Dans ce cas, la couleur bleue a une somme de 207, tandis que la couleur rouge a 
 
 ### Question 10
 
-Implémenter le traitement.
+    Implémenter le traitement.
 
 ### Reponse
 
@@ -175,7 +175,7 @@ Cette commande permet de prendre un chiffre de minimum 2 et maximum 8. Donc si l
 
 ### Question 12
 
-Implémenter le tramage aléatoire des images.
+    Implémenter le tramage aléatoire des images.
 
 ### Reponse
 
