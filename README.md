@@ -557,6 +557,143 @@ Les coefficients de diffusion sont divisés par 16 pour normaliser les valeurs. 
 
 ---
 
+# Question 20 : 
+![alt text](./imagePourReadMe/Question19Enonce.png)
+
+# Réponse : 
+
+### Étape 1 : Définir une structure pour représenter une matrice de diffusion d'erreurs :
+
+```Rust
+struct ErrorDiffusionMatrice {
+    matrice: Vec<(i32, i32, f32)>,
+    diviseur: f32,
+}
+```
+
+### Étape 2 : Ajouter des matrices de diffusion d'erreurs pour Jarvis-Judice-Ninke et Atkinson : 
+
+```Rust
+const FLOYD_STEINBERG: ErrorDiffusionMatrice = ErrorDiffusionMatrice {
+    matrice: vec![
+        (1, 0, 7.0 / 16.0),
+        (-1, 1, 3.0 / 16.0),
+        (0, 1, 5.0 / 16.0),
+        (1, 1, 1.0 / 16.0),
+    ],
+    diviseur: 16.0,
+};
+
+const JARVIS_JUDICE_NINKE: ErrorDiffusionMatrice = ErrorDiffusionMatrice {
+    matrice: vec![
+        (1, 0, 7.0 / 48.0),
+        (2, 0, 5.0 / 48.0),
+        (-2, 1, 3.0 / 48.0),
+        (-1, 1, 5.0 / 48.0),
+        (0, 1, 7.0 / 48.0),
+        (1, 1, 5.0 / 48.0),
+        (2, 1, 3.0 / 48.0),
+        (-2, 2, 1.0 / 48.0),
+        (-1, 2, 3.0 / 48.0),
+        (0, 2, 5.0 / 48.0),
+        (1, 2, 3.0 / 48.0),
+        (2, 2, 1.0 / 48.0),
+    ],
+    diviseur: 48.0,
+};
+
+const ATKINSON: ErrorDiffusionMatrice = ErrorDiffusionMatrice {
+    matrice: vec![
+        (1, 0, 1.0 / 8.0),
+        (2, 0, 1.0 / 8.0),
+        (-1, 1, 1.0 / 8.0),
+        (0, 1, 1.0 / 8.0),
+        (1, 1, 1.0 / 8.0),
+        (0, 2, 1.0 / 8.0),
+    ],
+    diviseur: 8.0,
+};
+```
+### Étape 3 : Modifier la fonction de diffusion d'erreurs pour utiliser une matrice de diffusion d'erreurs arbitraire : 
+
+```Rust
+fn mode_error_diffusion(img: DynamicImage, output: &Option<String>, matrix: &ErrorDiffusionMatrix) -> Result<(), ImageError> {
+    // Palette adaptée aux couleurs dominantes extraites de l'image donnée
+    let palette = vec![
+        Rgba([0, 0, 0, 255]), 
+        Rgba([255, 255, 255, 255]),
+        Rgba([185, 17, 40, 255]), 
+        Rgba([19, 105, 18, 255]),  //vert  
+    ];
+
+    // Convertir l'image en RGBA et obtenir ses dimensions
+    let grayscale = img.to_rgba8();
+    let (width, height) = grayscale.dimensions();
+    let mut buffer = grayscale.clone();
+
+    // Fonction pour calculer la distance euclidienne entre deux couleurs
+    fn color_distance(c1: &Rgba<u8>, c2: &Rgba<u8>) -> f32 {
+        let r_diff = c1[0] as f32 - c2[0] as f32;
+        let g_diff = c1[1] as f32 - c2[1] as f32;
+        let b_diff = c1[2] as f32 - c2[2] as f32;
+        (r_diff * r_diff + g_diff * g_diff + b_diff * b_diff).sqrt()
+    }
+
+    // Parcourir chaque pixel de l'image
+    for y in 0..height {
+        for x in 0..width {
+            let old_pixel = buffer.get_pixel(x, y).0;
+
+            // Trouver la couleur la plus proche de la palette
+            let mut closest_color = &palette[0];
+            let mut min_distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), &palette[0]);
+
+            for color in &palette[1..] {
+                let distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), color);
+                if distance < min_distance {
+                    closest_color = color;
+                    min_distance = distance;
+                }
+            }
+
+            // Remplacer le pixel par la couleur la plus proche
+            buffer.put_pixel(x, y, *closest_color);
+
+            // Calculer l'erreur (différence entre la couleur originale et la couleur de la palette)
+            let error = [
+                old_pixel[0] as i32 - closest_color[0] as i32,
+                old_pixel[1] as i32 - closest_color[1] as i32,
+                old_pixel[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur en utilisant la matrice de diffusion d'erreurs
+            for &(dx, dy, factor) in &matrix.matrix {
+                let nx = x as i32 + dx;
+                let ny = y as i32 + dy;
+                if nx >= 0 && nx < width as i32 && ny >= 0 && ny < height as i32 {
+                    let neighbor_pixel = buffer.get_pixel(nx as u32, ny as u32).0;
+                    let new_neighbor_pixel = [
+                        (neighbor_pixel[0] as i32 + (error[0] as f32 * factor) as i32).clamp(0, 255) as u8,
+                        (neighbor_pixel[1] as i32 + (error[1] as f32 * factor) as i32).clamp(0, 255) as u8,
+                        (neighbor_pixel[2] as i32 + (error[2] as f32 * factor) as i32).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    buffer.put_pixel(nx as u32, ny as u32, Rgba(new_neighbor_pixel));
+                }
+            }
+        }
+    }
+
+    // Sauvegarder l'image traitée
+    save_image(DynamicImage::ImageRgba8(buffer), output)?;
+    Ok(())
+}
+```
+### Étape 4 : Permettre de sélectionner la matrice de diffusion d'erreurs via les arguments de la ligne de commande :
+
+Lors du lancement de la ligne de commande, nous allons préciser quelle matrice nous souhaitons utiliser pour la diffusion d'erreur et l'image sera donc généré grâce à celle-ci.
+
+---
 
 question 23 :
 
