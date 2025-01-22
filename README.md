@@ -452,9 +452,10 @@ Cette méthode utilise donc une palette de couleurs donnée dès le début. Ensu
 
 --- 
 
-### Question 19 :
-Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg 1
-16 (0  3   ∗
+### Question 19 :
+
+    Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg 1
+    16 (0  3   ∗
     5  7   1)
 
 ### Reponse : 
@@ -761,7 +762,7 @@ Lors du lancement de la ligne de commande, nous allons préciser quelle matrice 
 
 ### Question 21
 
-Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par `cargo run -- --help`.
+    Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par `cargo run -- --help`.
 
 ### Reponse 
 
