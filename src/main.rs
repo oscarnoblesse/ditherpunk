@@ -59,11 +59,11 @@ struct OptsDithering {}
 struct OptsSeuil {}
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
-#[argh(subcommand, name="ditheringBayer",description = "mode permetant de mettre l'image en noir et blanc.")]
+#[argh(subcommand, name="ditheringBayer",description = "mode permetant d'appliquer la matrice de bayer a une image.")]
 /// Rendu de l'image par seuillage monochrome.
 struct OptsDitheringBayer {
     /// Couleur pour les pixels blancs (format: R,G,B)
-    #[argh(option, description = "mouleur pour les pixels blancs (format: R,G,B)")]
+    #[argh(option, description = "nombre pour la taille de la matrice de bayer")]
     order: String,
 }
 
