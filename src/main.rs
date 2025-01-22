@@ -30,6 +30,7 @@ enum Mode {
     Dithering(OptsDithering),
     ErrorDiffusion(OptsErrorDiffusion),
     ErrorDiffusionPalette(OptsErrorDiffusionPalette), 
+    ErrorDiffusionMatriceFloyd(OptsErrorDiffusionMatriceFloyd),
     DitheringBayer(OptsDitheringBayer),
 }
 
@@ -88,6 +89,11 @@ struct OptsDualColorMix {
 struct OptsErrorDiffusionPalette {
 }
 
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+#[argh(subcommand, name = "errorDiffusionMatriceFloyd", description = "Mode de diffusion d'erreur avec palette")]
+struct OptsErrorDiffusionMatriceFloyd {
+}
+
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
 const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
@@ -129,6 +135,9 @@ fn main() -> Result<(), ImageError> {
         }
         Mode::ErrorDiffusionPalette(_) => {
             let _ = mode_error_diffusion_palette(img, &args.output);
+        }
+        Mode::ErrorDiffusionMatriceFloyd(_) => {
+            let _ = mode_error_diffusion_matrice_floyd(img, &args.output);
         }
     }
 
@@ -463,6 +472,107 @@ fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> R
                         (bottom_right_pixel[0] as i32 + (error[0] * 1 / 32)).clamp(0, 255) as u8,
                         (bottom_right_pixel[1] as i32 + (error[1] * 1 / 32)).clamp(0, 255) as u8,
                         (bottom_right_pixel[2] as i32 + (error[2] * 1 / 32)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    buffer.put_pixel(x + 1, y + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+
+    // Sauvegarder l'image traitée
+    save_image(DynamicImage::ImageRgba8(buffer), output)?;
+    Ok(())
+}
+
+fn mode_error_diffusion_matrice_floyd(img: DynamicImage, output: &Option<String>) -> Result<(), ImageError> {
+    // Palette adaptée aux couleurs dominantes extraites de l'image donnée
+    let palette = vec![
+        Rgba([0, 0, 0, 255]), 
+        Rgba([255, 255, 255, 255]),
+        Rgba([185, 17, 40, 255]), 
+        Rgba([19, 105, 18, 255]),  //vert  
+    ];
+
+    // Convertir l'image en RGBA et obtenir ses dimensions
+    let grayscale = img.to_rgba8();
+    let (width, height) = grayscale.dimensions();
+    let mut buffer = grayscale.clone();
+
+    // Fonction pour calculer la distance euclidienne entre deux couleurs
+    fn color_distance(c1: &Rgba<u8>, c2: &Rgba<u8>) -> f32 {
+        let r_diff = c1[0] as f32 - c2[0] as f32;
+        let g_diff = c1[1] as f32 - c2[1] as f32;
+        let b_diff = c1[2] as f32 - c2[2] as f32;
+        (r_diff * r_diff + g_diff * g_diff + b_diff * b_diff).sqrt()
+    }
+
+    // Parcourir chaque pixel de l'image
+    for y in 0..height {
+        for x in 0..width {
+            let old_pixel = buffer.get_pixel(x, y).0;
+
+            // Trouver la couleur la plus proche de la palette
+            let mut closest_color = &palette[0];
+            let mut min_distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), &palette[0]);
+
+            for color in &palette[1..] {
+                let distance = color_distance(&Rgba([old_pixel[0], old_pixel[1], old_pixel[2], 255]), color);
+                if distance < min_distance {
+                    closest_color = color;
+                    min_distance = distance;
+                }
+            }
+
+            // Remplacer le pixel par la couleur la plus proche
+            buffer.put_pixel(x, y, *closest_color);
+
+            // Calculer l'erreur (différence entre la couleur originale et la couleur de la palette)
+            let error = [
+                old_pixel[0] as i32 - closest_color[0] as i32,
+                old_pixel[1] as i32 - closest_color[1] as i32,
+                old_pixel[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur en utilisant la matrice de Floyd-Steinberg
+            if x + 1 < width {
+                let right_pixel = buffer.get_pixel(x + 1, y).0;
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + (error[0] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 7 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                buffer.put_pixel(x + 1, y, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = buffer.get_pixel(x - 1, y + 1).0;
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + (error[0] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + (error[1] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + (error[2] * 3 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    buffer.put_pixel(x - 1, y + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = buffer.get_pixel(x, y + 1).0;
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + (error[0] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + (error[1] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + (error[2] * 5 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                buffer.put_pixel(x, y + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = buffer.get_pixel(x + 1, y + 1).0;
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + (error[0] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + (error[1] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + (error[2] * 1 / 16)).clamp(0, 255) as u8,
                         255,
                     ];
                     buffer.put_pixel(x + 1, y + 1, Rgba(new_bottom_right_pixel));
