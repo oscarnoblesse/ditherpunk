@@ -15,6 +15,7 @@ Pour ouvrir une image depuis un fichier, on utilise `image::open(&args.input)?`.
     Sauver l’image obtenue au format png. Que se passe-t-il si l’image de départ avait un canal alpha?
     
     Expliquer dans le README de votre rendu ce qui se passe ici.
+
 ### Reponse 
 Lorsque l'image de départ a un canal alpha (transparence), ce canal est ignoré lors de la conversion en niveaux de gris et lors du seuillage binaire. La conversion en niveaux de gris ne conserve pas la transparence, et le seuillage binaire ne prend pas en compte le canal alpha. Lorsque l'image est convertie en RGB pour la sauvegarde, le canal alpha n'est pas réintroduit. Par conséquent, l'image finale sauvegardée au format PNG est en RGB sans transparence, même si l'image d'origine avait un canal alpha.
 
@@ -44,6 +45,8 @@ Oui, l'image obtenue est reconnaissable. Pour le faire, il suffisait de parcouri
 Pour réaliser cette image, j'ai utilisé le programme suivant :
 
 ![alt text](./imagePourReadMe/imageQuestion5Programme.png)
+
+Commande : cargo run ./image/iut.png ./image/question5 pixelBlanc
 
 ---
 
@@ -79,6 +82,12 @@ La méthode `mode_seuil` convertit l'image en niveaux de gris, puis applique un 
 4. **Affichage de la valeur d'un pixel** : La valeur du pixel à la position (32, 50) est affichée pour vérification.
 5. **Sauvegarde de l'image** : L'image est sauvegardée en utilisant la fonction `save_image`.
 
+### Voici le résultat : 
+![alt text](imagePourReadMe/question7_res.png)
+
+Commande : cargo run ./image/iut.png ./image/question7 seuil
+
+
 ### Question 8
 
     Permettre à l’utilisateurice de remplacer “noir” et “blanc” par une paire de couleurs au choix.
@@ -98,6 +107,11 @@ Nous avons ensuite modifié la fonction `mode_seuil` pour pouvoir changer de cou
 ![alt text](imagePourReadMe/question8(2).png)
 
 Nous pouvons voir dans cette méthode que nous utilisons les arguments de la ligne de commande pour définir la couleur des pixels en fonction de leur luminosité.
+
+Résultat : 
+![alt text](imagePourReadMe/question8_res.png)
+
+Commande : cargo run ./image/iut.png ./image/question8.png seuilNoirBlanc --noir 230,50,0 --blanc 240,112,255
 
 ---
 
@@ -155,6 +169,12 @@ Cette fonction utilise deux autres fonctions : une pour récupérer le RGB des c
 
 ![alt text](./imagePourReadMe/imageQuestion10FonctionDeRecuperationDeLaPallette.png)
 
+Résultat : 
+
+![alt text](./imagePourReadMe/question10_res.png)
+
+Commande : cargo run ./image/iut.png ./image/question10.png dualColorMix --nombre-palette 5
+
 ---
 
 ### Question 11
@@ -193,7 +213,10 @@ La partie suivante crée une nouvelle image en appliquant un tramage aléatoire.
 - Un seuil aléatoire est généré entre 0 et 1.
 - Si la luminosité du pixel est supérieure au seuil aléatoire, le pixel est défini comme blanc (`Luma([255])`), sinon il est défini comme noir (`Luma([0])`).
 
+Résultat :
+![alt text](./imagePourReadMe/question12_res.png)
 
+cargo run  ./image/iut.png ./image/question12.png dithering
 ---
 
 ### Question 13
@@ -304,6 +327,11 @@ buffer.put_pixel(x, y + 1, Luma([new_below_pixel.clamp(0, 255) as u8]));
 let rgb_image = DynamicImage::ImageLuma8(buffer).to_rgb8();
 save_image(DynamicImage::ImageRgb8(rgb_image), output)?;
 ```
+
+Résultat : 
+![alt text](./imagePourReadMe/question16_res.png)
+
+Commande : cargo run  ./image/iut.png     ./image/question16.png errorDiffusion
 
 ---
 
@@ -449,6 +477,11 @@ fn mode_error_diffusion_palette(img: DynamicImage, output: &Option<String>) -> R
 }
 ```
 Cette méthode utilise donc une palette de couleurs donnée dès le début. Ensuite, nous convertissons l'image en RGBA. On calcule ensuite la distance euclidienne entre deux couleurs puis on parcourt chaque pixel de l'image et on trouve la couleur la plus proche de la palette. Pour finir, on remplace le pixel par la couleur la plus proche et on calcule l'erreur que l'on diffuse aux voisins et ainsi de suite.
+
+Résultat :
+![alt text](./imagePourReadMe/question18_res.png)
+
+Commande : cargo run  ./image/iut.png  ./image/question18.png errorDiffusionPalette
 
 --- 
 
@@ -619,6 +652,12 @@ Les coefficients de diffusion sont divisés par 16 pour normaliser les valeurs. 
 3/16 de l'erreur est diffusée au pixel en bas à gauche.
 5/16 de l'erreur est diffusée au pixel en bas.
 1/16 de l'erreur est diffusée au pixel en bas à droite.
+
+Résultat : 
+![alt text](./imagePourReadMe/question19_res.png)
+
+Commande : cargo run  ./image/iut.png     ./image/question19.png errorDiffusionMatriceFloyd
+
 
 ---
 
